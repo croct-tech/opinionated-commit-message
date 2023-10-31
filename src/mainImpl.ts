@@ -41,7 +41,7 @@ async function runWithExceptions(): Promise<void> {
     maxBodyLineLengthInput,
     enforceSignOffInput,
     validatePullRequestCommitsInput,
-    skipBodyCheckInput
+    skipBodyCheckInput,
   );
 
   if (maybeInputs.error !== null) {
@@ -57,7 +57,6 @@ async function runWithExceptions(): Promise<void> {
     core.getInput('github-token', {required: false}),
   );
 
-
   ////
   // Inspect
   ////
@@ -72,7 +71,7 @@ async function runWithExceptions(): Promise<void> {
       const repr: string = represent.formatErrors(
         message,
         messageIndex,
-        errors
+        errors,
       );
 
       parts.push(repr);
@@ -90,8 +89,8 @@ async function runWithExceptions(): Promise<void> {
 /**
  * Main function
  */
-export function run(): void {
-  runWithExceptions().catch((error) => {
+export async function run(): Promise<void> {
+  return runWithExceptions().catch(error => {
     if (error instanceof Error) {
       core.error(error);
       core.setFailed(error.message);

@@ -25,7 +25,7 @@ export class Inputs {
     maxBodyLineLength: number,
     enforceSignOff: boolean,
     validatePullRequestCommits: boolean,
-    skipBodyCheck: boolean
+    skipBodyCheck: boolean,
   ) {
     this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
     this.pathToAdditionalVerbs = pathToAdditionalVerbs;
@@ -50,7 +50,7 @@ export class MaybeInputs {
 
     if (inputs !== null && error !== null) {
       throw Error(
-        "Unexpected both 'inputs' and 'error' arguments to be given."
+        "Unexpected both 'inputs' and 'error' arguments to be given.",
       );
     }
 
@@ -62,7 +62,7 @@ export class MaybeInputs {
     if (this.inputs === null) {
       throw Error(
         "The field 'inputs' is expected to be set, but it is null. " +
-          `The field 'error' is: ${this.error}`
+          `The field 'error' is: ${this.error}`,
       );
     }
     return this.inputs;
@@ -77,7 +77,7 @@ export function parseInputs(
   maxBodyLineLengthInput: string,
   enforceSignOffInput: string,
   validatePullRequestCommitsInput: string,
-  skipBodyCheckInput: string
+  skipBodyCheckInput: string,
 ): MaybeInputs {
   const additionalVerbs = new Set<string>();
 
@@ -94,7 +94,7 @@ export function parseInputs(
       return new MaybeInputs(
         null,
         'The file referenced by path-to-additional-verbs could ' +
-          `not be found: ${pathToAdditionalVerbsInput}`
+          `not be found: ${pathToAdditionalVerbsInput}`,
       );
     }
 
@@ -113,7 +113,7 @@ export function parseInputs(
     return new MaybeInputs(
       null,
       'Unexpected value for allow-one-liners. ' +
-        `Expected either 'true' or 'false', got: ${allowOneLinersInput}`
+        `Expected either 'true' or 'false', got: ${allowOneLinersInput}`,
     );
   }
 
@@ -125,7 +125,7 @@ export function parseInputs(
     return new MaybeInputs(
       null,
       'Unexpected value for max-subject-line-length. ' +
-        `Expected a number or nothing, got ${maxSubjectLengthInput}`
+        `Expected a number or nothing, got ${maxSubjectLengthInput}`,
     );
   }
 
@@ -137,7 +137,7 @@ export function parseInputs(
     return new MaybeInputs(
       null,
       'Unexpected value for max-body-line-length. ' +
-        `Expected a number or nothing, got ${maxBodyLineLengthInput}`
+        `Expected a number or nothing, got ${maxBodyLineLengthInput}`,
     );
   }
 
@@ -149,19 +149,20 @@ export function parseInputs(
     return new MaybeInputs(
       null,
       'Unexpected value for enforce-sign-off. ' +
-        `Expected either 'true' or 'false', got: ${enforceSignOffInput}`
+        `Expected either 'true' or 'false', got: ${enforceSignOffInput}`,
     );
   }
 
-  const validatePullRequestCommits: boolean | null = !validatePullRequestCommitsInput
-    ? false
-    : parseBooleanFromString(validatePullRequestCommitsInput);
+  const validatePullRequestCommits: boolean | null =
+    !validatePullRequestCommitsInput
+      ? false
+      : parseBooleanFromString(validatePullRequestCommitsInput);
 
   if (validatePullRequestCommits === null) {
     return new MaybeInputs(
       null,
       'Unexpected value for validate-pull-request-commits. ' +
-        `Expected either 'true' or 'false', got: ${validatePullRequestCommitsInput}`
+        `Expected either 'true' or 'false', got: ${validatePullRequestCommitsInput}`,
     );
   }
 
@@ -173,7 +174,7 @@ export function parseInputs(
     return new MaybeInputs(
       null,
       'Unexpected value for skip-body-check. ' +
-        `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`
+        `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`,
     );
   }
 
@@ -187,9 +188,9 @@ export function parseInputs(
       maxBodyLineLength,
       enforceSignOff,
       validatePullRequestCommits,
-      skipBodyCheck
+      skipBodyCheck,
     ),
-    null
+    null,
   );
 }
 

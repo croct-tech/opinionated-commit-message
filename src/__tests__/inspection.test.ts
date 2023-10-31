@@ -70,7 +70,7 @@ it('reports no errors on any message when body check is disabled.', () => {
   expect(inspection.check(message, inputCheckingBody)).not.toEqual([]);
 
   const inputNotCheckingBody = input
-    .parseInputs('', '', '', '', '', '', 'true', '')
+    .parseInputs('', '', '', '', '', '', '','true')
     .mustInputs();
 
   expect(inspection.check(message, inputNotCheckingBody)).toEqual([]);

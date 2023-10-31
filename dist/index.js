@@ -32891,7 +32891,7 @@ function errorMessageOnNonVerb(firstWord, inputs) {
             'Whether the word is in imperative mood is determined by ' +
             'whitelisting. The general whitelist is available at ' +
             'https://github.com/mristin/opinionated-commit-message/' +
-            'blob/master/src/mostFrequentEnglishVerbs.ts.'
+            'blob/master/src/mostFrequentEnglishVerbs.ts.',
     ];
     if (!inputs.hasAdditionalVerbsInput) {
         parts.push('You can whitelist additional verbs using ' +
@@ -33204,16 +33204,18 @@ function runWithExceptions() {
  * Main function
  */
 function run() {
-    runWithExceptions().catch((error) => {
-        if (error instanceof Error) {
-            core.error(error);
-            core.setFailed(error.message);
-        }
-        else {
-            const message = `Unexpected error value: ${error}`;
-            core.error(message);
-            core.setFailed(message);
-        }
+    return __awaiter(this, void 0, void 0, function* () {
+        return runWithExceptions().catch(error => {
+            if (error instanceof Error) {
+                core.error(error);
+                core.setFailed(error.message);
+            }
+            else {
+                const message = `Unexpected error value: ${error}`;
+                core.error(message);
+                core.setFailed(message);
+            }
+        });
     });
 }
 exports.run = run;
@@ -34005,7 +34007,7 @@ exports.SET = new Set([
     'upgrade',
     'verbosify',
     'whitelist',
-    'wrap'
+    'wrap',
 ]);
 
 

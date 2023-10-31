@@ -12,7 +12,10 @@ import type {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-method
  *
  * @returns   string[]
  */
-export async function retrieve(inputs: Inputs, token?: string): Promise<string[]> {
+export async function retrieve(
+  inputs: Inputs,
+  token?: string,
+): Promise<string[]> {
   const result: string[] = [];
 
   switch (github.context.eventName) {
@@ -70,23 +73,29 @@ async function extractMessagesFromPullRequest(
   return getCommits(pullRequest, token);
 }
 
-async function getCommits(pullRequest: PullRequest, token?: string): Promise<string[]> {
+async function getCommits(
+  pullRequest: PullRequest,
+  token?: string,
+): Promise<string[]> {
   // Head repository where commits are registered. Value is null when the PR within a single repository,
   // in which use base repository instead.
   const repo = pullRequest.head.repo ?? pullRequest.base.repo;
 
   if (repo.private && token === undefined) {
-    throw new Error('GitHub token is required to validate pull request commits on private repository.');
+    throw new Error(
+      'GitHub token is required to validate pull request commits on private repository.',
+    );
   }
 
   const octokit = github.getOctokit(token ?? '');
 
-  type Commits = RestEndpointMethodTypes['pulls']['listCommits']['response']['data'];
+  type Commits =
+    RestEndpointMethodTypes['pulls']['listCommits']['response']['data'];
 
   const commits = await octokit.request<Commits>({
     method: 'GET',
     url: pullRequest.commits_url,
-  })
+  });
 
   return commits.data.map(({commit}) => commit.message);
 }
