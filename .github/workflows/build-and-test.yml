@@ -35,6 +35,7 @@ jobs:
       - uses: ./
         with:
           validate-pull-request-commits: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   test-allow-one-liners:
     runs-on: ubuntu-latest

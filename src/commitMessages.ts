@@ -1,5 +1,4 @@
 import * as github from '@actions/github';
-import {inspect} from 'util';
 import {Inputs} from './input';
 import type {PullRequest} from '@octokit/webhooks-types';
 import type {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-methods';
@@ -15,8 +14,6 @@ import type {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-method
  */
 export async function retrieve(inputs: Inputs, token?: string): Promise<string[]> {
   const result: string[] = [];
-
-  console.log(inspect(github.context, {depth: null}));
 
   switch (github.context.eventName) {
     case 'pull_request': {
