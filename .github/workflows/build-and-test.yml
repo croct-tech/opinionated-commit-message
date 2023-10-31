@@ -28,6 +28,14 @@ jobs:
           additional-verbs: 'chrusimusi, unit-test'
           path-to-additional-verbs: src/additional-verbs.txt
 
+  test-pr-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          validate-pull-request-commits: true
+
   test-allow-one-liners:
     runs-on: ubuntu-latest
     steps:
