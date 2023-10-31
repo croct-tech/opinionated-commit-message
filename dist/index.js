@@ -32572,6 +32572,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.retrieve = void 0;
 const github = __importStar(__nccwpck_require__(5438));
@@ -32584,46 +32593,75 @@ const util_1 = __nccwpck_require__(3837);
  *
  * @returns   string[]
  */
-function retrieve() {
+function retrieve(inputs, token) {
     var _a, _b;
-    const result = [];
-    console.log((0, util_1.inspect)(github.context, { depth: null }));
-    switch (github.context.eventName) {
-        case 'pull_request': {
-            const pullRequest = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
-            if (pullRequest) {
-                let msg = pullRequest.title;
-                if (pullRequest.body) {
-                    msg = msg.concat('\n\n', pullRequest.body);
+    return __awaiter(this, void 0, void 0, function* () {
+        const result = [];
+        console.log((0, util_1.inspect)(github.context, { depth: null }));
+        switch (github.context.eventName) {
+            case 'pull_request': {
+                const pullRequest = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
+                if (pullRequest) {
+                    return extractMessagesFromPullRequest(
+                    // Action payloads are the same as WebHook payloads, so cast is safe.
+                    pullRequest, inputs, token);
                 }
-                result.push(msg);
+                else {
+                    throw new Error(`No pull_request found in the payload.`);
+                }
+                break;
             }
-            else {
-                throw new Error(`No pull_request found in the payload.`);
-            }
-            break;
-        }
-        case 'push': {
-            const commits = (_b = github.context.payload) === null || _b === void 0 ? void 0 : _b.commits;
-            if (commits) {
-                for (const commit of commits) {
-                    if (commit.message) {
-                        result.push(commit.message);
+            case 'push': {
+                const commits = (_b = github.context.payload) === null || _b === void 0 ? void 0 : _b.commits;
+                if (commits) {
+                    for (const commit of commits) {
+                        if (commit.message) {
+                            result.push(commit.message);
+                        }
                     }
                 }
+                if (result.length === 0) {
+                    throw new Error(`No commits found in the payload.`);
+                }
+                break;
             }
-            if (result.length === 0) {
-                throw new Error(`No commits found in the payload.`);
+            default: {
+                throw new Error(`Unhandled event: ${github.context.eventName}`);
             }
-            break;
         }
-        default: {
-            throw new Error(`Unhandled event: ${github.context.eventName}`);
-        }
-    }
-    return result;
+        return result;
+    });
 }
 exports.retrieve = retrieve;
+function extractMessagesFromPullRequest(pullRequest, inputs, token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!inputs.validatePullRequestCommits) {
+            let msg = pullRequest.title;
+            if (pullRequest.body) {
+                msg = msg.concat('\n\n', pullRequest.body);
+            }
+            return [msg];
+        }
+        return getCommits(pullRequest, token);
+    });
+}
+function getCommits(pullRequest, token) {
+    var _a;
+    return __awaiter(this, void 0, void 0, function* () {
+        // Head repository where commits are registered. Value is null when the PR within a single repository,
+        // in which use base repository instead.
+        const repo = (_a = pullRequest.head.repo) !== null && _a !== void 0 ? _a : pullRequest.base.repo;
+        if (repo.private && token === undefined) {
+            throw new Error('GitHub token is required to validate pull request commits on private repository.');
+        }
+        const octokit = github.getOctokit(token !== null && token !== void 0 ? token : '');
+        const commits = yield octokit.request({
+            method: 'GET',
+            url: pullRequest.commits_url,
+        });
+        return commits.data.map(({ commit }) => commit.message);
+    });
+}
 
 
 /***/ }),
@@ -32640,7 +32678,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseVerbs = exports.parseInputs = exports.MaybeInputs = exports.Inputs = void 0;
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 class Inputs {
-    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, skipBodyCheck) {
+    constructor(hasAdditionalVerbsInput, pathToAdditionalVerbs, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, validatePullRequestCommits, skipBodyCheck) {
         this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
         this.pathToAdditionalVerbs = pathToAdditionalVerbs;
         this.allowOneLiners = allowOneLiners;
@@ -32648,6 +32686,7 @@ class Inputs {
         this.maxSubjectLength = maxSubjectLength;
         this.maxBodyLineLength = maxBodyLineLength;
         this.enforceSignOff = enforceSignOff;
+        this.validatePullRequestCommits = validatePullRequestCommits;
         this.skipBodyCheck = skipBodyCheck;
     }
 }
@@ -32672,7 +32711,7 @@ class MaybeInputs {
     }
 }
 exports.MaybeInputs = MaybeInputs;
-function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, skipBodyCheckInput) {
+function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, validatePullRequestCommitsInput, skipBodyCheckInput) {
     const additionalVerbs = new Set();
     const hasAdditionalVerbsInput = additionalVerbsInput.length > 0;
     if (additionalVerbsInput) {
@@ -32718,6 +32757,13 @@ function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneL
         return new MaybeInputs(null, 'Unexpected value for enforce-sign-off. ' +
             `Expected either 'true' or 'false', got: ${enforceSignOffInput}`);
     }
+    const validatePullRequestCommits = !validatePullRequestCommitsInput
+        ? false
+        : parseBooleanFromString(validatePullRequestCommitsInput);
+    if (validatePullRequestCommits === null) {
+        return new MaybeInputs(null, 'Unexpected value for validate-pull-request-commits. ' +
+            `Expected either 'true' or 'false', got: ${validatePullRequestCommitsInput}`);
+    }
     const skipBodyCheck = !skipBodyCheckInput
         ? false
         : parseBooleanFromString(skipBodyCheckInput);
@@ -32725,7 +32771,7 @@ function parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneL
         return new MaybeInputs(null, 'Unexpected value for skip-body-check. ' +
             `Expected either 'true' or 'false', got: ${skipBodyCheckInput}`);
     }
-    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, skipBodyCheck), null);
+    return new MaybeInputs(new Inputs(hasAdditionalVerbsInput, pathToAdditionalVerbsInput, allowOneLiners, additionalVerbs, maxSubjectLength, maxBodyLineLength, enforceSignOff, validatePullRequestCommits, skipBodyCheck), null);
 }
 exports.parseInputs = parseInputs;
 function parseVerbs(text) {
@@ -33097,6 +33143,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
@@ -33105,53 +33160,53 @@ const inspection = __importStar(__nccwpck_require__(7647));
 const represent = __importStar(__nccwpck_require__(4478));
 const input = __importStar(__nccwpck_require__(6747));
 function runWithExceptions() {
-    var _a, _b, _c, _d, _e, _f, _g;
-    const messages = commitMessages.retrieve();
-    ////
-    // Parse inputs
-    ////
-    const additionalVerbsInput = (_a = core.getInput('additional-verbs', { required: false })) !== null && _a !== void 0 ? _a : '';
-    const pathToAdditionalVerbsInput = (_b = core.getInput('path-to-additional-verbs', { required: false })) !== null && _b !== void 0 ? _b : '';
-    const allowOneLinersInput = (_c = core.getInput('allow-one-liners', { required: false })) !== null && _c !== void 0 ? _c : '';
-    const maxSubjectLengthInput = (_d = core.getInput('max-subject-line-length', { required: false })) !== null && _d !== void 0 ? _d : '';
-    const maxBodyLineLengthInput = (_e = core.getInput('max-body-line-length', { required: false })) !== null && _e !== void 0 ? _e : '';
-    const enforceSignOffInput = (_f = core.getInput('enforce-sign-off', { required: false })) !== null && _f !== void 0 ? _f : '';
-    const skipBodyCheckInput = (_g = core.getInput('skip-body-check', { required: false })) !== null && _g !== void 0 ? _g : '';
-    const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, skipBodyCheckInput);
-    if (maybeInputs.error !== null) {
-        core.error(maybeInputs.error);
-        core.setFailed(maybeInputs.error);
-        return;
-    }
-    const inputs = maybeInputs.mustInputs();
-    ////
-    // Inspect
-    ////
-    // Parts of the error message to be concatenated with '\n'
-    const parts = [];
-    for (const [messageIndex, message] of messages.entries()) {
-        const errors = inspection.check(message, inputs);
-        if (errors.length > 0) {
-            const repr = represent.formatErrors(message, messageIndex, errors);
-            parts.push(repr);
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    return __awaiter(this, void 0, void 0, function* () {
+        ////
+        // Parse inputs
+        ////
+        const additionalVerbsInput = (_a = core.getInput('additional-verbs', { required: false })) !== null && _a !== void 0 ? _a : '';
+        const pathToAdditionalVerbsInput = (_b = core.getInput('path-to-additional-verbs', { required: false })) !== null && _b !== void 0 ? _b : '';
+        const allowOneLinersInput = (_c = core.getInput('allow-one-liners', { required: false })) !== null && _c !== void 0 ? _c : '';
+        const maxSubjectLengthInput = (_d = core.getInput('max-subject-line-length', { required: false })) !== null && _d !== void 0 ? _d : '';
+        const maxBodyLineLengthInput = (_e = core.getInput('max-body-line-length', { required: false })) !== null && _e !== void 0 ? _e : '';
+        const enforceSignOffInput = (_f = core.getInput('enforce-sign-off', { required: false })) !== null && _f !== void 0 ? _f : '';
+        const validatePullRequestCommitsInput = (_g = core.getInput('validate-pull-request-commits', { required: false })) !== null && _g !== void 0 ? _g : '';
+        const skipBodyCheckInput = (_h = core.getInput('skip-body-check', { required: false })) !== null && _h !== void 0 ? _h : '';
+        const maybeInputs = input.parseInputs(additionalVerbsInput, pathToAdditionalVerbsInput, allowOneLinersInput, maxSubjectLengthInput, maxBodyLineLengthInput, enforceSignOffInput, validatePullRequestCommitsInput, skipBodyCheckInput);
+        if (maybeInputs.error !== null) {
+            core.error(maybeInputs.error);
+            core.setFailed(maybeInputs.error);
+            return;
         }
-        else {
-            core.info(`The message is OK:\n---\n${message}\n---`);
+        const inputs = maybeInputs.mustInputs();
+        const messages = yield commitMessages.retrieve(inputs, core.getInput('github-token', { required: false }));
+        ////
+        // Inspect
+        ////
+        // Parts of the error message to be concatenated with '\n'
+        const parts = [];
+        for (const [messageIndex, message] of messages.entries()) {
+            const errors = inspection.check(message, inputs);
+            if (errors.length > 0) {
+                const repr = represent.formatErrors(message, messageIndex, errors);
+                parts.push(repr);
+            }
+            else {
+                core.info(`The message is OK:\n---\n${message}\n---`);
+            }
         }
-    }
-    const errorMessage = parts.join('\n');
-    if (errorMessage.length > 0) {
-        core.setFailed(errorMessage);
-    }
+        const errorMessage = parts.join('\n');
+        if (errorMessage.length > 0) {
+            core.setFailed(errorMessage);
+        }
+    });
 }
 /**
  * Main function
  */
 function run() {
-    try {
-        runWithExceptions();
-    }
-    catch (error) {
+    runWithExceptions().catch((error) => {
         if (error instanceof Error) {
             core.error(error);
             core.setFailed(error.message);
@@ -33161,7 +33216,7 @@ function run() {
             core.error(message);
             core.setFailed(message);
         }
-    }
+    });
 }
 exports.run = run;
 

@@ -1,13 +1,10 @@
 import * as core from '@actions/core';
-
 import * as commitMessages from './commitMessages';
 import * as inspection from './inspection';
 import * as represent from './represent';
 import * as input from './input';
 
-function runWithExceptions(): void {
-  const messages: string[] = commitMessages.retrieve();
-
+async function runWithExceptions(): Promise<void> {
   ////
   // Parse inputs
   ////
@@ -30,6 +27,9 @@ function runWithExceptions(): void {
   const enforceSignOffInput =
     core.getInput('enforce-sign-off', {required: false}) ?? '';
 
+  const validatePullRequestCommitsInput =
+    core.getInput('validate-pull-request-commits', {required: false}) ?? '';
+
   const skipBodyCheckInput =
     core.getInput('skip-body-check', {required: false}) ?? '';
 
@@ -40,6 +40,7 @@ function runWithExceptions(): void {
     maxSubjectLengthInput,
     maxBodyLineLengthInput,
     enforceSignOffInput,
+    validatePullRequestCommitsInput,
     skipBodyCheckInput
   );
 
@@ -50,6 +51,12 @@ function runWithExceptions(): void {
   }
 
   const inputs = maybeInputs.mustInputs();
+
+  const messages: string[] = await commitMessages.retrieve(
+    inputs,
+    core.getInput('github-token', {required: false}),
+  );
+
 
   ////
   // Inspect
@@ -84,9 +91,7 @@ function runWithExceptions(): void {
  * Main function
  */
 export function run(): void {
-  try {
-    runWithExceptions();
-  } catch (error) {
+  runWithExceptions().catch((error) => {
     if (error instanceof Error) {
       core.error(error);
       core.setFailed(error.message);
@@ -95,5 +100,5 @@ export function run(): void {
       core.error(message);
       core.setFailed(message);
     }
-  }
+  });
 }

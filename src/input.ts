@@ -7,6 +7,7 @@ export class Inputs {
   public maxSubjectLength: number;
   public maxBodyLineLength: number;
   public skipBodyCheck: boolean;
+  public validatePullRequestCommits: boolean;
 
   // This is a complete appendix to the whiltelist parsed both from
   // the GitHub action input "additional-verbs" and from the file
@@ -23,6 +24,7 @@ export class Inputs {
     maxSubjectLength: number,
     maxBodyLineLength: number,
     enforceSignOff: boolean,
+    validatePullRequestCommits: boolean,
     skipBodyCheck: boolean
   ) {
     this.hasAdditionalVerbsInput = hasAdditionalVerbsInput;
@@ -32,6 +34,7 @@ export class Inputs {
     this.maxSubjectLength = maxSubjectLength;
     this.maxBodyLineLength = maxBodyLineLength;
     this.enforceSignOff = enforceSignOff;
+    this.validatePullRequestCommits = validatePullRequestCommits;
     this.skipBodyCheck = skipBodyCheck;
   }
 }
@@ -73,6 +76,7 @@ export function parseInputs(
   maxSubjectLengthInput: string,
   maxBodyLineLengthInput: string,
   enforceSignOffInput: string,
+  validatePullRequestCommitsInput: string,
   skipBodyCheckInput: string
 ): MaybeInputs {
   const additionalVerbs = new Set<string>();
@@ -149,6 +153,18 @@ export function parseInputs(
     );
   }
 
+  const validatePullRequestCommits: boolean | null = !validatePullRequestCommitsInput
+    ? false
+    : parseBooleanFromString(validatePullRequestCommitsInput);
+
+  if (validatePullRequestCommits === null) {
+    return new MaybeInputs(
+      null,
+      'Unexpected value for validate-pull-request-commits. ' +
+        `Expected either 'true' or 'false', got: ${validatePullRequestCommitsInput}`
+    );
+  }
+
   const skipBodyCheck: boolean | null = !skipBodyCheckInput
     ? false
     : parseBooleanFromString(skipBodyCheckInput);
@@ -170,6 +186,7 @@ export function parseInputs(
       maxSubjectLength,
       maxBodyLineLength,
       enforceSignOff,
+      validatePullRequestCommits,
       skipBodyCheck
     ),
     null
