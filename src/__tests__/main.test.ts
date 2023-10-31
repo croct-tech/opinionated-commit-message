@@ -29,7 +29,7 @@ it('ensures that the core mocks are reset between the tests.', () => {
 it('considers additional verbs.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => ['Table SomeClass\n\nThis is a dummy commit.']);
+    .mockResolvedValue(['Table SomeClass\n\nThis is a dummy commit.']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -47,7 +47,7 @@ it('considers additional verbs.', () => {
 it('considers additional verbs from path.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => ['Table SomeClass\n\nThis is a dummy commit.']);
+    .mockResolvedValue(['Table SomeClass\n\nThis is a dummy commit.']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -75,7 +75,7 @@ it('considers additional verbs from path.', () => {
 it('considers allow-one-liners.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => ['Do something']);
+    .mockResolvedValue(['Do something']);
 
   jest.spyOn(core, 'setFailed');
 
@@ -91,7 +91,7 @@ it('considers allow-one-liners.', () => {
 it('considers skip-body-check.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       'Change SomeClass to OtherClass\n' +
         '\n' +
         'Change SomeClass to OtherClass.' +
@@ -113,7 +113,7 @@ it('considers skip-body-check.', () => {
 it('formats properly no error message.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       'Change SomeClass to OtherClass\n' +
         '\n' +
         'This replaces the SomeClass with OtherClass in all of the module \n' +
@@ -130,7 +130,7 @@ it('formats properly no error message.', () => {
 it('formats properly errors on a single message.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       'change SomeClass to OtherClass\n\nSomeClass with OtherClass'
     ]);
 
@@ -155,7 +155,7 @@ it('formats properly errors on a single message.', () => {
 it('formats properly errors on two messages.', () => {
   jest
     .spyOn(commitMessages, 'retrieve')
-    .mockImplementation(() => [
+    .mockResolvedValue([
       `change SomeClass to OtherClass\n\nDo something`,
       'Change other subject\n\nChange body'
     ]);

@@ -37,6 +37,7 @@ it('parses the inputs.', () => {
     '90',
     '100',
     'true',
+    'false',
     'true'
   );
 
