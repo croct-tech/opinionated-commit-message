@@ -1,4 +1,5 @@
 import * as github from '@actions/github';
+import {inspect} from 'util';
 
 // This code has been taken from https://github.com/GsActions/commit-message-checker/blob/master/src/input-helper.ts
 // and slightly modified.
@@ -11,6 +12,8 @@ import * as github from '@actions/github';
  */
 export function retrieve(): string[] {
   const result: string[] = [];
+
+  console.log(inspect(github.context, {depth: null}));
 
   switch (github.context.eventName) {
     case 'pull_request': {

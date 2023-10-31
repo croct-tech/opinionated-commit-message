@@ -32575,6 +32575,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.retrieve = void 0;
 const github = __importStar(__nccwpck_require__(5438));
+const util_1 = __nccwpck_require__(3837);
 // This code has been taken from https://github.com/GsActions/commit-message-checker/blob/master/src/input-helper.ts
 // and slightly modified.
 /**
@@ -32586,6 +32587,7 @@ const github = __importStar(__nccwpck_require__(5438));
 function retrieve() {
     var _a, _b;
     const result = [];
+    console.log((0, util_1.inspect)(github.context, { depth: null }));
     switch (github.context.eventName) {
         case 'pull_request': {
             const pullRequest = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
